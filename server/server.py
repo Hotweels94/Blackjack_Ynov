@@ -30,7 +30,6 @@ def threaded_client(conn):
             player_data = json.loads(data.decode("utf-8"))
             print(f"Joueur reçu : {player_data}")
 
-            # Réponse au client
             response = f"Joueur {player_data['username']} enregistré avec {player_data['balance']} €"
             conn.sendall(response.encode('utf-8'))
             

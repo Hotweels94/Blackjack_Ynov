@@ -14,8 +14,9 @@ def send_data(data):
         return response
     except socket.error as e:
         print(e)
+    finally:
+        socket_client.close()
 
 player = Player(1, "Ryan", "ryvida@hotmail.fr", "1234", 1000, "online")
 player_json = player.to_json()
-print(player.username)
-send_data(player_json)
+print(send_data(player_json))
