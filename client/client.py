@@ -17,4 +17,5 @@ def send_data(data):
 
 player = Player(1, "Ryan", "ryvida@hotmail.fr", "1234", 1000, "online")
 player_json = player.to_json()
+print(player.username)
 send_data(player_json)
