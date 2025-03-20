@@ -1,8 +1,9 @@
+import json
 import socket
 from _thread import *
 import sys
 
-server = "192.168.56.1" # My testing address
+server = "127.0.0.1" # My testing address
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,20 +20,20 @@ print("Waiting for a connection, server started")
 
 
 def threaded_client(conn):
-    reply = ""
     while True:
         try:
             data = conn.recv(2048)
-            reply = data.decode("utf-8")
             
             if not data:
                 print("Disconnected")
                 break
-            else:
-                print("Recived: ", reply)
-                print("Sending: ", reply)
-                
-            conn.sendall(str.encode(reply))
+            player_data = json.loads(data.decode("utf-8"))
+            print(f"Joueur reçu : {player_data}")
+
+            # Réponse au client
+            response = f"Joueur {player_data['username']} enregistré avec {player_data['balance']} €"
+            conn.sendall(response.encode('utf-8'))
+            
         except:
             break
         
