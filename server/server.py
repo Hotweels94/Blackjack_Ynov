@@ -3,7 +3,7 @@ import socket
 from _thread import *
 import sys
 
-server = "127.0.0.1" # My testing address
+server = "192.168.1.168" # My testing address
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

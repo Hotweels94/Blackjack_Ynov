@@ -12,29 +12,29 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. File d'attente des joueurs
-CREATE TABLE waiting_queue (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    table_id INT;
-    join_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ip_address VARCHAR(45),
-    port INT,
-    status ENUM('waiting', 'matched') DEFAULT 'waiting',
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (table_id) REFERENCES game_tables(id)
-);
-
--- 3. Tables de jeu
+-- 2. Tables de jeu
 CREATE TABLE game_tables (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     min_bet DECIMAL(10,2) DEFAULT 0.00,
-    max_players INT DEFAULT 7,
-    current_players INT DEFAULT 0,
+    max_players INT DEFAULT 7 CHECK (max_players = 7),
+    current_players INT DEFAULT 0 CHECK (current_players <= 7),
     status ENUM('open', 'waiting', 'ongoing', 'closed') DEFAULT 'open',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 3. File d'attente des joueurs
+CREATE TABLE waiting_queue (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    table_id INT,
+    join_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45),
+    port INT,
+    status ENUM('waiting', 'matched') DEFAULT 'waiting',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (table_id) REFERENCES game_tables(id) ON DELETE SET NULL
 );
 
 -- 4. Parties en cours
@@ -47,7 +47,7 @@ CREATE TABLE games (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     finished_at TIMESTAMP,
     result ENUM('player1_win', 'player2_win', 'draw') DEFAULT 'draw',
-    FOREIGN KEY (table_id) REFERENCES game_tables(id)
+    FOREIGN KEY (table_id) REFERENCES game_tables(id) ON DELETE CASCADE
 );
 
 -- 5. Joueurs dans une partie
@@ -59,8 +59,9 @@ CREATE TABLE game_players (
     bet_amount DECIMAL(10,2) NOT NULL,
     status ENUM('playing', 'stand', 'bust', 'win', 'lose') DEFAULT 'playing',
     final_balance DECIMAL(10,2),
-    FOREIGN KEY (game_id) REFERENCES games(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(game_id, user_id)
 );
 
 -- 6. Historique des parties des joueurs
@@ -72,8 +73,8 @@ CREATE TABLE game_history (
     total_bet DECIMAL(10,2) NOT NULL,
     payout DECIMAL(10,2),
     played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (game_id) REFERENCES games(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
 );
 
 -- 7. Tour de jeu
@@ -84,6 +85,6 @@ CREATE TABLE game_turns (
     action ENUM('hit', 'stand', 'double', 'split') NOT NULL,
     card JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (game_id) REFERENCES games(id),
-    FOREIGN KEY (player_id) REFERENCES game_players(id)
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    FOREIGN KEY (player_id) REFERENCES game_players(id) ON DELETE CASCADE
 );
