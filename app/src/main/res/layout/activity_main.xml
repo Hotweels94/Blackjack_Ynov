@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="@drawable/rounded_input"
-        android:padding="16dp"> <!-- Augmentation du padding -->
+        android:padding="16dp">
 
         <ImageView
             android:layout_width="24dp"
@@ -67,7 +67,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="@drawable/rounded_input"
-        android:padding="16dp"> <!-- Augmenter le padding -->
+        android:padding="16dp">
 
         <ImageView
             android:layout_width="24dp"
