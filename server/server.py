@@ -2,8 +2,9 @@ import json
 import socket
 from _thread import *
 import sys
+import time
 
-server = "192.168.1.168" # My testing address
+server = "192.168.56.1" # My testing address
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -14,9 +15,9 @@ try:
 except socket.error as e:
     print(e)
     
+queue = []
 s.listen(7) # Number of player (normally)
 print("Waiting for a connection, server started")
-
 
 
 def threaded_client(conn):
@@ -28,17 +29,30 @@ def threaded_client(conn):
                 print("Disconnected")
                 break
             player_data = json.loads(data.decode("utf-8"))
+            queue.append(player_data)
             print(f"Joueur reçu : {player_data}")
 
             response = f"Joueur {player_data['username']} enregistré avec {player_data['balance']} €"
+                
             conn.sendall(response.encode('utf-8'))
             
-        except:
+        except Exception as e:
             break
         
+def matchmaking():
+    start_time = time.time()
+    while True:
+        if len(queue) >= 7 or (time.time() - start_time > 90 and len(queue) > 0):
+            game = queue[0:7]
+            queue[:] = queue[7:]
+            print("New game with players : ")
+            for player in game:
+                print(player)
+            start_time = time.time()
 
 while True:
     conn, addr = s.accept()
     print("Connected : ", addr)
     
     start_new_thread(threaded_client, (conn,))
+    start_new_thread(matchmaking, ())
