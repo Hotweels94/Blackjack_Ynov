@@ -8,6 +8,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.blackjack_game.Game.BlackjackConsole;
+
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -48,8 +51,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class SocketClient extends AsyncTask<String, Void, String> {
-        private static final String SERVER_IP = "192.168.1.168"; // Adresse IP du serveur
+        private static final String SERVER_IP = "192.168.56.1"; // Adresse IP du serveur
         private static final int SERVER_PORT = 5555;
+        private Socket socket;
+        private PrintWriter out;
+        private BufferedReader in;
 
         @Override
         protected String doInBackground(String... params) {
@@ -62,20 +68,20 @@ public class MainActivity extends AppCompatActivity {
                 json.put("email", params[0]);
                 json.put("password", params[1]);
 
-                // Envoi des données au serveur
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                out.println(json.toString());
+                out = new PrintWriter(socket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                // Lecture de la réponse du serveur
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                String response = in.readLine();
-                socket.close();
-                return response;
+                out.println(json.toString());
+                String serverMessage;
+                while((serverMessage = in.readLine()) != null) {
+                    final String message = serverMessage;
+                    runOnUiThread(() -> handleServerMessage(message));
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();
-                return "Erreur de connexion au serveur";
             }
+            return "";
         }
 
         @Override
@@ -86,6 +92,17 @@ public class MainActivity extends AppCompatActivity {
                 responseText.setText("Erreur : " + result);
                 Toast.makeText(MainActivity.this, "Erreur : " + result, Toast.LENGTH_SHORT).show();
             }
+        }
+
+        private void handleServerMessage(String message) {
+            if (message.equals("start_game")) {
+                responseText.setText("La partie commence !");
+                
+                BlackjackConsole.start_game();
+            } else {
+                responseText.setText("Message du serveur : " + message);
+            }
+
         }
     }
 }

@@ -45,9 +45,11 @@ def matchmaking():
         if len(queue) >= 7 or (time.time() - start_time > 90 and len(queue) > 0):
             game = queue[0:7]
             queue[:] = queue[7:]
-            print("New game with players : ")
             for player in game:
-                print(player)
+                try:
+                    player["conn"].sendall(str.encode("start_game\n"))  
+                except:
+                    pass
             start_time = time.time()
 
 while True:

@@ -7,6 +7,10 @@ public class BlackjackConsole {
     private static GameLogic game;
 
     public static void main(String[] args) {
+        start_game();
+    }
+
+    public static void start_game() {
         System.out.println("Salut, viens joeur au Blackjack aussi appelé 21!");
         System.out.print("Entre ton nom (get name auto): "); /* le faire automatiquement */
         String name = scanner.nextLine();
