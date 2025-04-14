@@ -29,6 +29,7 @@ def threaded_client(conn):
                 print("Disconnected")
                 break
             player_data = json.loads(data.decode("utf-8"))
+            player_data["conn"] = conn
             queue.append(player_data)
             print(f"Joueur reçu : {player_data}")
 
@@ -52,9 +53,9 @@ def matchmaking():
                     pass
             start_time = time.time()
 
+start_new_thread(matchmaking, ())
 while True:
     conn, addr = s.accept()
     print("Connected : ", addr)
     
     start_new_thread(threaded_client, (conn,))
-    start_new_thread(matchmaking, ())

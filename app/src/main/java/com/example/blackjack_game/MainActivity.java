@@ -20,13 +20,15 @@ import java.net.Socket;
 public class MainActivity extends AppCompatActivity {
 
     private EditText emailInput, passwordInput;
-    private TextView responseText;
     private Button loginButton;
+    private TextView aText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        aText = findViewById(R.id.aText);
 
         // Initialisation des vues
         emailInput = findViewById(R.id.emailInput);
@@ -44,65 +46,84 @@ public class MainActivity extends AppCompatActivity {
                 if (!email.isEmpty() && !password.isEmpty()) {
                     new SocketClient().execute(email, password);
                 } else {
-                    responseText.setText("Veuillez remplir tous les champs !");
+                    aText.setText("Veuillez remplir tous les champs !");
                 }
             }
         });
     }
 
     private class SocketClient extends AsyncTask<String, Void, String> {
-        private static final String SERVER_IP = "192.168.56.1"; // Adresse IP du serveur
+        private static final String SERVER_IP = "192.168.56.1";
         private static final int SERVER_PORT = 5555;
+        private PrintWriter output;
+        private BufferedReader input;
         private Socket socket;
-        private PrintWriter out;
-        private BufferedReader in;
 
         @Override
         protected String doInBackground(String... params) {
             try {
-                // Création du socket pour se connecter au serveur
-                Socket socket = new Socket(SERVER_IP, SERVER_PORT);
+                String email = params[0];
+                String password = params[1];
 
-                // Création d'un objet JSON avec l'email et le mot de passe
+                socket = new Socket(SERVER_IP, SERVER_PORT);
+                output = new PrintWriter(socket.getOutputStream(), true);
+                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
                 JSONObject json = new JSONObject();
-                json.put("email", params[0]);
-                json.put("password", params[1]);
+                json.put("username", email);
+                json.put("password", password);
 
-                out = new PrintWriter(socket.getOutputStream(), true);
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                output.println(json.toString());
 
-                out.println(json.toString());
-                String serverMessage;
-                while((serverMessage = in.readLine()) != null) {
-                    final String message = serverMessage;
-                    runOnUiThread(() -> handleServerMessage(message));
-                }
+                // Lance le thread d'écoute
+                new Thread(new IncomingReader()).start();
+
+                // Ne lis PAS la réponse ici, laisse IncomingReader s'en occuper
+                return "Connexion établie";
 
             } catch (Exception e) {
                 e.printStackTrace();
+                return "Erreur de connexion";
             }
-            return "";
         }
 
         @Override
         protected void onPostExecute(String result) {
-            if (result.equals("OK")) {
-                responseText.setText("Connexion réussie");
-            } else {
-                responseText.setText("Erreur : " + result);
-                Toast.makeText(MainActivity.this, "Erreur : " + result, Toast.LENGTH_SHORT).show();
-            }
+            super.onPostExecute(result);
+            // Affiche la réponse dans un TextView ou autre
+            Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
         }
 
-        private void handleServerMessage(String message) {
-            if (message.equals("start_game")) {
-                responseText.setText("La partie commence !");
-                
-                BlackjackConsole.start_game();
-            } else {
-                responseText.setText("Message du serveur : " + message);
+        private class IncomingReader implements Runnable {
+            @Override
+            public void run() {
+                try {
+                    String message;
+                    while ((message = input.readLine()) != null) {
+                        final String finalMessage = message;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (finalMessage.equals("start_game")) {
+                                    aText.setText("HEY OH!");
+                                    Toast.makeText(MainActivity.this, "La partie commence !", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    // Pour les autres messages
+                                    aText.setText(finalMessage);
+                                }
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            aText.setText("Erreur de connexion au serveur");
+                        }
+                    });
+                }
             }
-
         }
     }
 }

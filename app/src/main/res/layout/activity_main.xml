@@ -8,16 +8,18 @@
     android:background="@color/black">
 
     <TextView
+        android:id="@+id/connexionText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingBottom="24dp"
         android:text="Connexion"
-        android:textSize="26sp"
-        android:textStyle="bold"
         android:textColor="@color/white"
-        android:paddingBottom="24dp"/>
+        android:textSize="26sp"
+        android:textStyle="bold" />
 
     <!-- Email -->
     <TextView
+        android:id="@+id/aText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="6dp"
