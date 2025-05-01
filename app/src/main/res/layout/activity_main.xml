@@ -1,116 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:gravity="center"
     android:orientation="vertical"
-    android:background="@color/black">
+    android:gravity="top|center_horizontal"
+    android:background="#093500">
+
+    <!-- Info haut (nbr joueurs & solde) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="10dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:weightSum="2">
+
+        <!-- nbr joueurs -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="70dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="@android:color/transparent">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/fond" />
+
+                <!-- Contenu -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/status_online"
+                        android:contentDescription="Icône joueur"
+                        android:layout_marginRight="7dp"
+                        android:layout_marginBottom="7.5dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="7 joueurs\n#AJ42B4"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </RelativeLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Solde -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="70dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@android:color/transparent">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/fond" />
+
+                <!-- Contenu -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:padding="10dp">
+
+                    <ImageView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/coin"
+                        android:contentDescription="Icône solde"
+                        android:layout_marginRight="8dp" />
+
+                    <TextView
+                        android:id="@+id/balanceText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3 000$"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </RelativeLayout>
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <!-- Main du Croupier -->
+<androidx.cardview.widget.CardView
+    android:layout_width="360dp"
+    android:layout_height="235dp"
+    android:layout_marginBottom="16dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    android:backgroundTint="@android:color/transparent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Image de fond -->
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/poker" />
+
+        <!-- Layout dyna -->
+        <LinearLayout
+            android:id="@+id/dealerCardsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="10dp"/>
+
+        <TextView
+            android:id="@+id/dealerHandTitle"
+            android:layout_width="match_parent"
+            android:layout_height="47dp"
+            android:gravity="center"
+            android:background="@drawable/rounded_top"
+            android:text="MANCHE 1 - MAIN DU CROUPIER"
+            android:textColor="#191919"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>
+
+    <!-- Main du Joueur -->
+    <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="235dp"
+    android:layout_marginBottom="24dp">
+
+    <!-- Image de fond -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/poker" />
+
+    <!-- Layout dynamiuqe -->
+    <LinearLayout
+        android:id="@+id/playerCardsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="10dp"/>
 
     <TextView
-        android:id="@+id/connexionText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingBottom="24dp"
-        android:text="Connexion"
-        android:textColor="@color/white"
-        android:textSize="26sp"
+        android:id="@+id/playerHandTitle"
+        android:layout_width="match_parent"
+        android:layout_height="47dp"
+        android:background="@drawable/white_top"
+        android:gravity="center"
+        android:text="VOTRE MAIN"
+        android:textColor="#191919"
+        android:textSize="16sp"
         android:textStyle="bold" />
 
-    <!-- Email -->
-    <TextView
-        android:id="@+id/aText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:text="Adresse e-mail"
-        android:textColor="@color/white"
-        android:textSize="16sp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@drawable/rounded_input"
-        android:padding="16dp">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            app:tint="@color/gray"/>
-
-        <EditText
-            android:id="@+id/emailInput"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:hint="Entrez votre e-mail"
-            app:hintTextColor="@color/light_gray"
-            android:inputType="textEmailAddress"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/white"
-            android:importantForAccessibility="yes" />
-    </LinearLayout>
-
-    <!-- Mot de passe -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="6dp"
-        android:text="Mot de passe"
-        android:textColor="@color/white"
-        android:textSize="16sp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@drawable/rounded_input"
-        android:padding="16dp">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            app:tint="@color/gray"/>
-
-        <EditText
-            android:id="@+id/passwordInput"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:hint="Entrez votre mot de passe"
-            app:hintTextColor="@color/light_gray"
-            android:inputType="textPassword"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/white"
-            android:importantForAccessibility="yes" />
-    </LinearLayout>
-
     <Button
-        android:id="@+id/loginButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/rounded_button"
-        android:text="Se connecter"
-        android:textAllCaps="false"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        android:paddingVertical="12dp"/>
-
-    <!-- Lien vers l'inscription -->
-    <TextView
-        android:id="@+id/registerLink"
+        android:id="@+id/see_hands"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Créer un compte"
-        android:textColor="@color/white"
-        android:textSize="16sp"
-        android:textStyle="bold"/>
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:text="Voir la main des \n autres joueurs"
+        android:textColor="#000000"
+        android:textSize="10dp"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="6dp"
+        android:backgroundTint="#50FFFFFF"
+        android:clipToOutline="true"
+        android:gravity="center" />
+</RelativeLayout>
+
+    <!-- Boutons d'action -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:weightSum="3">
+
+        <Button
+            android:id="@+id/hitButton"
+            android:layout_width="110dp"
+            android:layout_height="50dp"
+            android:text="HIT"
+            android:layout_margin="8dp"
+            android:backgroundTint="#D94C4C"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/standButton"
+            android:layout_width="110dp"
+            android:layout_height="50dp"
+            android:text="STAND"
+            android:layout_margin="8dp"
+            android:backgroundTint="#AAAAAA"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/doubleButton"
+            android:layout_width="110dp"
+            android:layout_height="50dp"
+            android:text="DOUBLER"
+            android:layout_margin="8dp"
+            android:backgroundTint="#5D9BFF"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+    <!-- Overlay de résultat -->
+    <RelativeLayout
+        android:id="@+id/resultOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true">
+
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/rounded_dialog"
+            android:padding="20dp"
+            android:layout_centerInParent="true">
+
+            <TextView
+                android:id="@+id/resultText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center"
+                android:layout_marginBottom="20dp"/>
+
+            <Button
+                android:id="@+id/continueButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Continuer"
+                android:layout_marginBottom="10dp"/>
+
+            <Button
+                android:id="@+id/quitButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Quitter la partie"/>
+        </LinearLayout>
+    </RelativeLayout>
 </LinearLayout>

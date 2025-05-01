@@ -1,129 +1,279 @@
 package com.example.blackjack_game;
 
-import android.os.AsyncTask;
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.blackjack_game.Game.Card;
+import com.example.blackjack_game.Game.GameLogic;
+import android.widget.EditText;
 
-import com.example.blackjack_game.Game.BlackjackConsole;
-
-import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
-
-    private EditText emailInput, passwordInput;
-    private Button loginButton;
-    private TextView aText;
+    private GameLogic game;
+    private TextView dealerHandTitle, playerHandTitle, balanceText;
+    private LinearLayout dealerCardsLayout, playerCardsLayout;
+    private Button hitButton, standButton, doubleButton, seeHandsButton;
+    private int currentRound = 1;
+    private View resultOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        aText = findViewById(R.id.aText);
+        initViews();
 
-        // Initialisation des vues
-        emailInput = findViewById(R.id.emailInput);
-        passwordInput = findViewById(R.id.passwordInput);
-        loginButton = findViewById(R.id.loginButton);
+        game = new GameLogic("Joueur", 3000.0);
 
-        // Définir l'action au clic sur le bouton
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String email = emailInput.getText().toString();
-                String password = passwordInput.getText().toString();
+        setupButtons();
+        showBetDialog();
+    }
 
-                // Vérification des champs non vides
-                if (!email.isEmpty() && !password.isEmpty()) {
-                    new SocketClient().execute(email, password);
-                } else {
-                    aText.setText("Veuillez remplir tous les champs !");
-                }
+    private void initViews() {
+        dealerHandTitle = findViewById(R.id.dealerHandTitle);
+        playerHandTitle = findViewById(R.id.playerHandTitle);
+        balanceText = findViewById(R.id.balanceText);
+        dealerCardsLayout = findViewById(R.id.dealerCardsLayout);
+        playerCardsLayout = findViewById(R.id.playerCardsLayout);
+        hitButton = findViewById(R.id.hitButton);
+        standButton = findViewById(R.id.standButton);
+        doubleButton = findViewById(R.id.doubleButton);
+        seeHandsButton = findViewById(R.id.see_hands);
+        resultOverlay = findViewById(R.id.resultOverlay);
+    }
+
+    private void setupButtons() {
+        hitButton.setOnClickListener(v -> {
+            game.playerHit();
+            updateGameState();
+            if (game.getPlayer().getHand().isBusted()) {
+                endRound();
             }
+        });
+
+        standButton.setOnClickListener(v -> {
+            game.playerStand();
+            endRound();
+        });
+
+        doubleButton.setOnClickListener(v -> {
+            if (game.getPlayer().canDoubleDown()) {
+                game.playerDoubleDown();
+                endRound();
+            } else {
+                Toast.makeText(this, "Double down impossible", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        seeHandsButton.setOnClickListener(v -> showOtherPlayersHands());
+    }
+
+    private void updateRoundTitle() {
+        dealerHandTitle.setText(String.format("MANCHE %d - MAIN DU CROUPIER", currentRound));
+    }
+
+    private void showBetDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Placez votre mise");
+        
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setHint("Montant entre 10 et " + game.getPlayer().getBalance());
+        builder.setView(input);
+        
+        builder.setPositiveButton("Confirmer", (dialog, which) -> {
+            try {
+                double bet = Double.parseDouble(input.getText().toString());
+                if (bet < 10 || bet > game.getPlayer().getBalance()) {
+                    Toast.makeText(this, "Mise invalide", Toast.LENGTH_SHORT).show();
+                    showBetDialog();
+                } else {
+                    startNewRound(bet);
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Montant invalide", Toast.LENGTH_SHORT).show();
+                showBetDialog();
+            }
+        });
+        
+        builder.setNegativeButton("Quitter", (dialog, which) -> finish());
+        builder.setCancelable(false);
+        builder.show();
+    }
+
+    private void startNewRound(double bet) {
+        try {
+            game.startNewRound(bet);
+            updateGameState();
+            setGameButtonsEnabled(true);
+        } catch (IllegalArgumentException e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            showBetDialog();
+        }
+    }
+
+    private void updateGameState() {
+        runOnUiThread(() -> {
+            // Màj solde
+            balanceText.setText(String.format("%,d$", (int)game.getPlayer().getBalance()));
+            
+            // Màj les img des cartes
+            updateCardImages();
+            
+            // Désactiver btn
+            doubleButton.setEnabled(game.getPlayer().canDoubleDown());
         });
     }
 
-    private class SocketClient extends AsyncTask<String, Void, String> {
-        private static final String SERVER_IP = "192.168.56.1";
-        private static final int SERVER_PORT = 5555;
-        private PrintWriter output;
-        private BufferedReader input;
-        private Socket socket;
-
-        @Override
-        protected String doInBackground(String... params) {
-            try {
-                String email = params[0];
-                String password = params[1];
-
-                socket = new Socket(SERVER_IP, SERVER_PORT);
-                output = new PrintWriter(socket.getOutputStream(), true);
-                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                JSONObject json = new JSONObject();
-                json.put("username", email);
-                json.put("password", password);
-
-                output.println(json.toString());
-
-                // Lance le thread d'écoute
-                new Thread(new IncomingReader()).start();
-
-                // Ne lis PAS la réponse ici, laisse IncomingReader s'en occuper
-                return "Connexion établie";
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return "Erreur de connexion";
+    private void updateCardImages() {
+        dealerCardsLayout.removeAllViews();
+        playerCardsLayout.removeAllViews();
+    
+        // Cartes croupier
+        for (int i = 0; i < game.getDealer().getCards().size(); i++) {
+            Card card = game.getDealer().getCards().get(i);
+            ImageView cardImage = createCardImageView(card, i > 0 && !game.isRoundOver());
+            dealerCardsLayout.addView(cardImage);
+            
+            // Ajouter une marge à droite sauf dernière carte
+            if (i < game.getDealer().getCards().size() - 1) {
+                View spacer = new View(this);
+                spacer.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(10), 0));
+                dealerCardsLayout.addView(spacer);
             }
         }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            // Affiche la réponse dans un TextView ou autre
-            Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
-        }
-
-        private class IncomingReader implements Runnable {
-            @Override
-            public void run() {
-                try {
-                    String message;
-                    while ((message = input.readLine()) != null) {
-                        final String finalMessage = message;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (finalMessage.equals("start_game")) {
-                                    aText.setText("HEY OH!");
-                                    Toast.makeText(MainActivity.this, "La partie commence !", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    // Pour les autres messages
-                                    aText.setText(finalMessage);
-                                }
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            aText.setText("Erreur de connexion au serveur");
-                        }
-                    });
-                }
+    
+        // Cartes joueur
+        for (int i = 0; i < game.getPlayer().getHand().getCards().size(); i++) {
+            Card card = game.getPlayer().getHand().getCards().get(i);
+            ImageView cardImage = createCardImageView(card, false);
+            playerCardsLayout.addView(cardImage);
+            
+            // Ajouter une marge à droite sauf dernière carte
+            if (i < game.getPlayer().getHand().getCards().size() - 1) {
+                View spacer = new View(this);
+                spacer.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(10), 0));
+                playerCardsLayout.addView(spacer);
             }
         }
+    }
+
+    private ImageView createCardImageView(Card card, boolean hidden) {
+        ImageView imageView = new ImageView(this);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            dpToPx(80),
+            dpToPx(120)
+        );
+        params.setMargins(dpToPx(5), 0, dpToPx(5), 0);
+        imageView.setLayoutParams(params);
+        
+        if (hidden) {
+            imageView.setImageResource(R.drawable.card_back);
+        } else {
+            loadCardImage(imageView, card);
+        }
+        return imageView;
+    }
+
+    private void loadCardImage(ImageView imageView, Card card) {
+        String imageName = getCardImageName(card);
+        int resId = getResources().getIdentifier(imageName, "drawable", getPackageName());
+        if (resId != 0) {
+            imageView.setImageResource(resId);
+        } else {
+            imageView.setImageResource(R.drawable.card_back);
+        }
+    }
+
+    private int dpToPx(int dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density);
+    }
+
+    private String getCardImageName(Card card) {
+        // Convertit rang en string
+        String rank;
+        switch(card.getRank()) {
+            case TWO: rank = "two"; break;
+            case THREE: rank = "three"; break;
+            case FOUR: rank = "four"; break;
+            case FIVE: rank = "five"; break;
+            case SIX: rank = "six"; break;
+            case SEVEN: rank = "seven"; break;
+            case EIGHT: rank = "eight"; break;
+            case NINE: rank = "nine"; break;
+            case TEN: rank = "ten"; break;
+            case JACK: rank = "jack"; break;
+            case QUEEN: rank = "queen"; break;
+            case KING: rank = "king"; break;
+            case ACE: rank = "ace"; break;
+            default: rank = card.getRank().name().toLowerCase();
+        }
+        
+        String suit = card.getSuit().name().toLowerCase();
+        return rank + "_" + suit;
+    }
+
+    private void endRound() {
+        game.determineWinner();
+        updateGameState();
+        showGameResult();
+        currentRound++;
+        updateRoundTitle();
+        setGameButtonsEnabled(false);
+    }
+
+    private void showGameResult() {
+        String result = determineResultText();
+        TextView resultText = findViewById(R.id.resultText);
+        resultText.setText(result);
+        resultOverlay.setVisibility(View.VISIBLE);
+    }
+
+    private String determineResultText() {
+        if (game.getPlayer().getHand().isBlackjack()) {
+            return "Blackjack!\nVous gagnez " + (int)(game.getPlayer().getCurrentBet() * 1.5) + "$ !";
+        } else if (game.getPlayer().getHand().isBusted()) {
+            return "Vous avez perdu!\nMise: " + (int)game.getPlayer().getCurrentBet() + "$";
+        } else if (game.getDealer().isBusted()) {
+            return "Croupier busted!\nVous gagnez " + (int)(game.getPlayer().getCurrentBet() * 2) + "$ !";
+        } else {
+            int playerScore = game.getPlayer().getHand().calculateScore();
+            int dealerScore = game.getDealer().calculateScore();
+            
+            if (playerScore > dealerScore) {
+                return "Vous gagnez!\n" + (int)(game.getPlayer().getCurrentBet() * 2) + "$ !";
+            } else if (playerScore == dealerScore) {
+                return "Égalité!\nRécupérez votre mise de " + (int)game.getPlayer().getCurrentBet() + "$";
+            } else {
+                return "Croupier gagne!\nMise: " + (int)game.getPlayer().getCurrentBet() + "$";
+            }
+        }
+    }
+
+    private void showOtherPlayersHands() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Mains des autres joueurs");
+        // Test autres joueurs (à remplacer données réelles)
+        StringBuilder sb = new StringBuilder();
+        sb.append("Joueur 2: 10♠ 8♦ (18)\n\n");
+        sb.append("Joueur 3: A♣ K♥ (Blackjack)\n\n");
+        sb.append("Joueur 4: 5♠ 5♥ 5♦ (15)\n\n");
+
+        builder.setMessage(sb.toString());
+        builder.setPositiveButton("OK", null);
+        builder.show();
+    }
+
+    private void setGameButtonsEnabled(boolean enabled) {
+        hitButton.setEnabled(enabled);
+        standButton.setEnabled(enabled);
+        doubleButton.setEnabled(enabled && game.getPlayer().canDoubleDown());
     }
 }

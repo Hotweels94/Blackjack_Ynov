@@ -10,6 +10,10 @@ public class Hand {
         cards = new ArrayList<>();
     }
 
+    public List<Card> getCards() {
+        return cards;
+    }
+
     public void addCard(Card card) {
         cards.add(card);
     }
@@ -63,5 +67,19 @@ public class Hand {
             return "Acune cartes";
         }
         return cards.get(0).toString();
+    }
+
+    public String getCardImageNames() {
+        StringBuilder sb = new StringBuilder();
+        for (Card card : cards) {
+            sb.append(card.getRank().name().toLowerCase())
+              .append("_")
+              .append(card.getSuit().name().toLowerCase())
+              .append(",");
+        }
+        if (!cards.isEmpty()) {
+            sb.setLength(sb.length() - 1); // Retirer dernière virgule
+        }
+        return sb.toString();
     }
 }

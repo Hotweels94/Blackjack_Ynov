@@ -4,7 +4,7 @@ from _thread import *
 import sys
 import time
 
-server = "192.168.56.1" # My testing address
+server = "192.168.1.168" # My testing address
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -52,6 +52,37 @@ def matchmaking():
                 except:
                     pass
             start_time = time.time()
+
+def threaded_client(conn):
+    while True:
+        try:
+            data = conn.recv(2048)
+            if not data:
+                print("Disconnected")
+                break
+            message = data.decode("utf-8")
+
+            if message.startswith("{"):  # Message JSON (connexion)
+                player_data = json.loads(message)
+                player_data["conn"] = conn
+                queue.append(player_data)
+                print(f"Joueur reçu : {player_data}")
+                response = f"Joueur {player_data['username']} enregistré"
+            else:  # Action de jeu
+                # Ex: "hit", "stand", "double"
+                # Traiter l'action et renvoyer l'état du jeu
+                response = process_game_action(message)
+
+            conn.sendall(response.encode('utf-8'))
+
+        except Exception as e:
+            print(e)
+            break
+
+def process_game_action(action):
+    #logique actions du jeu
+    # et renvoyer l'état mis à jour
+    return "action_processed:" + action
 
 start_new_thread(matchmaking, ())
 while True:

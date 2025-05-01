@@ -1,5 +1,7 @@
 package com.example.blackjack_game.Game;
 
+import java.util.List;
+
 public class GameLogic {
     private Deck deck;
     private Player player;
@@ -63,8 +65,8 @@ public class GameLogic {
 
     public boolean isRoundOver() {
         return player.getHand().isBusted() || 
-               (player.getHand().isBlackjack() && !dealer.isBlackjack()) ||
-               (!player.getHand().isBusted() && dealer.calculateScore() >= 17);
+               dealer.calculateScore() >= 17 ||
+               (player.getHand().isBlackjack() && !dealer.isBlackjack());
     }
 
     public Player getPlayer() {
@@ -73,5 +75,21 @@ public class GameLogic {
 
     public Dealer getDealer() {
         return dealer;
+    }
+
+    public String getDealerHandForDisplay(boolean showAll) {
+        if (showAll) {
+            return dealer.toString();
+        } else {
+            return dealer.getPartialHand();
+        }
+    }
+
+    public String getPlayerHandForDisplay() {
+        return player.getHand().toString();
+    }
+
+    public List<Card> getDealerCards() {
+        return dealer.getCards();
     }
 }
