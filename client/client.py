@@ -1,7 +1,7 @@
 import socket
 from player import Player
 
-server = "127.0.0.1"
+server = "192.168.56.1"
 port = 5555
 
 def send_data(data):

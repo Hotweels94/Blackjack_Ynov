@@ -4,7 +4,7 @@ from _thread import *
 import sys
 import time
 
-server = "192.168.1.168" # My testing address
+server = "192.168.56.1" # My testing address
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -39,6 +39,7 @@ def threaded_client(conn):
             
         except Exception as e:
             break
+  
         
 def matchmaking():
     start_time = time.time()
@@ -52,7 +53,7 @@ def matchmaking():
                 except:
                     pass
             start_time = time.time()
-
+'''
 def threaded_client(conn):
     while True:
         try:
@@ -78,7 +79,7 @@ def threaded_client(conn):
         except Exception as e:
             print(e)
             break
-
+'''
 def process_game_action(action):
     #logique actions du jeu
     # et renvoyer l'état mis à jour
