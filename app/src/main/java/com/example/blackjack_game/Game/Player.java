@@ -1,5 +1,9 @@
 package com.example.blackjack_game.Game;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class Player {
     private String name;
     private double balance;
@@ -63,5 +67,20 @@ public class Player {
 
     public boolean canDoubleDown() {
         return hand.cards.size() == 2 && balance >= currentBet;
+    }
+
+    public JSONObject getHandInJson() throws JSONException {
+        JSONArray cardArray = new JSONArray();
+        for (Card card : hand.getCards()) {
+            JSONObject cardJson = new JSONObject();
+            cardJson.put("rank", card.getRank());
+            cardJson.put("suit", card.getSuit());
+            cardArray.put(cardJson);
+        }
+        JSONObject result = new JSONObject();
+        result.put("type", "hand");
+        result.put("cards", cardArray);
+        result.put("username", getName());
+        return result;
     }
 }

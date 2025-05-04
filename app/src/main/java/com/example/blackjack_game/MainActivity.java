@@ -14,6 +14,8 @@ import com.example.blackjack_game.Game.Card;
 import com.example.blackjack_game.Game.GameLogic;
 import android.widget.EditText;
 
+import org.json.JSONException;
+
 
 public class MainActivity extends AppCompatActivity {
     private GameLogic game;
@@ -82,12 +84,12 @@ public class MainActivity extends AppCompatActivity {
     private void showBetDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Placez votre mise");
-        
+
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
         input.setHint("Montant entre 10 et " + game.getPlayer().getBalance());
         builder.setView(input);
-        
+
         builder.setPositiveButton("Confirmer", (dialog, which) -> {
             try {
                 double bet = Double.parseDouble(input.getText().toString());
@@ -102,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 showBetDialog();
             }
         });
-        
+
         builder.setNegativeButton("Quitter", (dialog, which) -> finish());
         builder.setCancelable(false);
         builder.show();
@@ -123,10 +125,10 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             // Màj solde
             balanceText.setText(String.format("%,d$", (int)game.getPlayer().getBalance()));
-            
+
             // Màj les img des cartes
             updateCardImages();
-            
+
             // Désactiver btn
             doubleButton.setEnabled(game.getPlayer().canDoubleDown());
         });
@@ -135,13 +137,13 @@ public class MainActivity extends AppCompatActivity {
     private void updateCardImages() {
         dealerCardsLayout.removeAllViews();
         playerCardsLayout.removeAllViews();
-    
+
         // Cartes croupier
         for (int i = 0; i < game.getDealer().getCards().size(); i++) {
             Card card = game.getDealer().getCards().get(i);
             ImageView cardImage = createCardImageView(card, i > 0 && !game.isRoundOver());
             dealerCardsLayout.addView(cardImage);
-            
+
             // Ajouter une marge à droite sauf dernière carte
             if (i < game.getDealer().getCards().size() - 1) {
                 View spacer = new View(this);
@@ -149,13 +151,13 @@ public class MainActivity extends AppCompatActivity {
                 dealerCardsLayout.addView(spacer);
             }
         }
-    
+
         // Cartes joueur
         for (int i = 0; i < game.getPlayer().getHand().getCards().size(); i++) {
             Card card = game.getPlayer().getHand().getCards().get(i);
             ImageView cardImage = createCardImageView(card, false);
             playerCardsLayout.addView(cardImage);
-            
+
             // Ajouter une marge à droite sauf dernière carte
             if (i < game.getPlayer().getHand().getCards().size() - 1) {
                 View spacer = new View(this);
@@ -168,12 +170,12 @@ public class MainActivity extends AppCompatActivity {
     private ImageView createCardImageView(Card card, boolean hidden) {
         ImageView imageView = new ImageView(this);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-            dpToPx(80),
-            dpToPx(120)
+                dpToPx(80),
+                dpToPx(120)
         );
         params.setMargins(dpToPx(5), 0, dpToPx(5), 0);
         imageView.setLayoutParams(params);
-        
+
         if (hidden) {
             imageView.setImageResource(R.drawable.card_back);
         } else {
@@ -215,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
             case ACE: rank = "ace"; break;
             default: rank = card.getRank().name().toLowerCase();
         }
-        
+
         String suit = card.getSuit().name().toLowerCase();
         return rank + "_" + suit;
     }
@@ -246,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             int playerScore = game.getPlayer().getHand().calculateScore();
             int dealerScore = game.getDealer().calculateScore();
-            
+
             if (playerScore > dealerScore) {
                 return "Vous gagnez!\n" + (int)(game.getPlayer().getCurrentBet() * 2) + "$ !";
             } else if (playerScore == dealerScore) {

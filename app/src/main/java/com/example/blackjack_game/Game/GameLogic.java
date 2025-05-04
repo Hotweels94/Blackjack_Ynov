@@ -1,11 +1,24 @@
 package com.example.blackjack_game.Game;
 
+import android.os.AsyncTask;
+import android.util.Log;
+
+import com.example.blackjack_game.ConnectionManager;
+import com.example.blackjack_game.PageConnection;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.List;
 
 public class GameLogic {
     private Deck deck;
     private Player player;
     private Dealer dealer;
+    public PrintWriter out;
+
 
     public GameLogic(String playerName, double initialBalance) {
         deck = new Deck();
@@ -22,6 +35,22 @@ public class GameLogic {
         dealer.addCard(deck.dealCard());
         player.getHand().addCard(deck.dealCard());
         dealer.addCard(deck.dealCard());
+
+        try {
+            JSONObject handJson = player.getHandInJson();
+            Log.d("GameLogic", "JSON à envoyer : " + handJson.toString(2)); // Pretty-print
+
+            PrintWriter out = ConnectionManager.getOut();
+            if (out != null) {
+                out.println(handJson.toString());
+                out.flush(); // Force l'envoi immédiat
+                Log.d("GameLogic", "JSON envoyé avec succès");
+            } else {
+                Log.e("GameLogic", "Erreur : PrintWriter est null");
+            }
+        } catch (Exception e) {
+            Log.e("GameLogic", "Erreur d'envoi : " + e.getMessage());
+        }
     }
 
     public void playerHit() {

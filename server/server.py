@@ -23,21 +23,48 @@ print("Waiting for a connection, server started")
 def threaded_client(conn):
     while True:
         try:
-            data = conn.recv(2048)
-            
+            data = conn.recv(4096)
             if not data:
-                print("Disconnected")
+                print("Client déconnecté")
                 break
-            player_data = json.loads(data.decode("utf-8"))
-            player_data["conn"] = conn
-            queue.append(player_data)
-            print(f"Joueur reçu : {player_data}")
 
-            response = f"Joueur {player_data['username']} enregistré avec {player_data['balance']} €"
+            raw_message = data.decode('utf-8')
+            print(f"Message brut reçu : {raw_message}")  # Debug important
+
+            try:
+                message = json.loads(raw_message)
                 
-            conn.sendall(response.encode('utf-8'))
-            
+                # Cas 1: Connexion initiale du joueur
+                if "username" in message and "password" in message:
+                    player_data = json.loads(data.decode("utf-8"))
+                    player_data["conn"] = conn
+                    queue.append(player_data)
+                    print(f"Joueur reçu : {player_data}")
+                    response = f"Joueur {player_data['username']} enregistré avec {player_data['balance']} €"  
+                    conn.sendall(response.encode('utf-8'))
+                
+                # Cas 2: Réception d'une main
+                elif "cards" in message:
+                    print("\n=== MAIN REÇUE ===")
+                    print(f"Joueur : {message.get('username', 'inconnu')}")
+                    print("Cartes :")
+                    for card in message['cards']:
+                        print(f"  - {card['rank']} de {card['suit']}")
+                    print("==================\n")
+                    conn.sendall(b"Main recue")
+                
+                #Autres
+                else:
+                    print(f"Action reçue : {message}")
+                    response = process_game_action(message.get("action", ""))
+                    conn.sendall(response.encode("utf-8"))
+
+            except json.JSONDecodeError:
+                print(f"Message non-JSON : {raw_message}")
+                conn.sendall(b"Message non valide")
+
         except Exception as e:
+            print(f"Erreur : {str(e)}")
             break
   
         
@@ -53,33 +80,7 @@ def matchmaking():
                 except:
                     pass
             start_time = time.time()
-'''
-def threaded_client(conn):
-    while True:
-        try:
-            data = conn.recv(2048)
-            if not data:
-                print("Disconnected")
-                break
-            message = data.decode("utf-8")
 
-            if message.startswith("{"):  # Message JSON (connexion)
-                player_data = json.loads(message)
-                player_data["conn"] = conn
-                queue.append(player_data)
-                print(f"Joueur reçu : {player_data}")
-                response = f"Joueur {player_data['username']} enregistré"
-            else:  # Action de jeu
-                # Ex: "hit", "stand", "double"
-                # Traiter l'action et renvoyer l'état du jeu
-                response = process_game_action(message)
-
-            conn.sendall(response.encode('utf-8'))
-
-        except Exception as e:
-            print(e)
-            break
-'''
 def process_game_action(action):
     #logique actions du jeu
     # et renvoyer l'état mis à jour

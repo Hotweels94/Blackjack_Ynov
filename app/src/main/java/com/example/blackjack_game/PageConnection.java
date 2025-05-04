@@ -53,7 +53,7 @@ public class PageConnection extends AppCompatActivity {
         });
     }
 
-    private class SocketClient extends AsyncTask<String, Void, String> {
+    public class SocketClient extends AsyncTask<String, Void, String> {
         private static final String SERVER_IP = "192.168.56.1";
         private static final int SERVER_PORT = 5555;
         private PrintWriter output;
@@ -69,6 +69,10 @@ public class PageConnection extends AppCompatActivity {
                 socket = new Socket(SERVER_IP, SERVER_PORT);
                 output = new PrintWriter(socket.getOutputStream(), true);
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                ConnectionManager.setSocket(socket);
+                ConnectionManager.setOut(output);
+                ConnectionManager.setIn(input);
 
                 JSONObject json = new JSONObject();
                 json.put("username", email);
