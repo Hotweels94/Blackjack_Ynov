@@ -25,11 +25,11 @@ def threaded_client(conn):
         try:
             data = conn.recv(4096)
             if not data:
-                print("Client déconnecté")
+                print("not data")
                 break
 
             raw_message = data.decode('utf-8')
-            print(f"Message brut reçu : {raw_message}")  # Debug important
+            print(f"Message brut reçu : {raw_message}")
 
             try:
                 message = json.loads(raw_message)

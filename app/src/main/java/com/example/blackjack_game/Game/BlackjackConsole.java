@@ -1,5 +1,7 @@
 package com.example.blackjack_game.Game;
 
+import org.json.JSONException;
+
 import java.util.Scanner;
 
 public class BlackjackConsole {
@@ -39,6 +41,8 @@ public class BlackjackConsole {
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
             return;
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
         }
 
         displayGameState(false);

@@ -118,6 +118,8 @@ public class MainActivity extends AppCompatActivity {
         } catch (IllegalArgumentException e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             showBetDialog();
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
         }
     }
 

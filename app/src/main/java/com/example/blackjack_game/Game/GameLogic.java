@@ -9,6 +9,8 @@ import com.example.blackjack_game.PageConnection;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
@@ -17,7 +19,6 @@ public class GameLogic {
     private Deck deck;
     private Player player;
     private Dealer dealer;
-    public PrintWriter out;
 
 
     public GameLogic(String playerName, double initialBalance) {
@@ -26,7 +27,7 @@ public class GameLogic {
         dealer = new Dealer();
     }
 
-    public void startNewRound(double betAmount) {
+    public void startNewRound(double betAmount) throws JSONException {
         player.placeBet(betAmount);
         player.clearHand();
         dealer.clear();
@@ -36,21 +37,13 @@ public class GameLogic {
         player.getHand().addCard(deck.dealCard());
         dealer.addCard(deck.dealCard());
 
-        try {
-            JSONObject handJson = player.getHandInJson();
-            Log.d("GameLogic", "JSON à envoyer : " + handJson.toString(2)); // Pretty-print
+        JSONObject handInJson = player.getHandInJson();
 
-            PrintWriter out = ConnectionManager.getOut();
-            if (out != null) {
-                out.println(handJson.toString());
-                out.flush(); // Force l'envoi immédiat
-                Log.d("GameLogic", "JSON envoyé avec succès");
-            } else {
-                Log.e("GameLogic", "Erreur : PrintWriter est null");
-            }
-        } catch (Exception e) {
-            Log.e("GameLogic", "Erreur d'envoi : " + e.getMessage());
-        }
+        Log.d("DEBUG", "Player: " + player);
+        Log.d("DEBUG", "Deck: " + deck);
+        Log.d("DEBUG", "Hand JSON: " + handInJson);
+
+        ConnectionManager.SendData(handInJson);
     }
 
     public void playerHit() {
