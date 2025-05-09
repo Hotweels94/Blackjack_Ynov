@@ -1,10 +1,14 @@
 package com.example.blackjack_game.Game;
 
+import static com.example.blackjack_game.Game.Dealer.*;
+
 import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.blackjack_game.ConnectionManager;
 import com.example.blackjack_game.PageConnection;
+import com.example.blackjack_game.Game.Dealer;
+import com.example.blackjack_game.MainActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,6 +16,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.CookieHandler;
 import java.net.Socket;
 import java.util.List;
 
@@ -33,17 +38,39 @@ public class GameLogic {
         dealer.clear();
 
         player.getHand().addCard(deck.dealCard());
-        dealer.addCard(deck.dealCard());
         player.getHand().addCard(deck.dealCard());
-        dealer.addCard(deck.dealCard());
 
-        JSONObject handInJson = player.getHandInJson();
 
-        Log.d("DEBUG", "Player: " + player);
-        Log.d("DEBUG", "Deck: " + deck);
-        Log.d("DEBUG", "Hand JSON: " + handInJson);
+        JSONObject playerHandInJson = player.getHandInJson();
+        ConnectionManager.SendData(playerHandInJson);
+        int millis = 100;
 
-        ConnectionManager.SendData(handInJson);
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+
+        dealer.getDealerHandFromServer(new ServerCallback() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d("GameLogic", "Main dealer reçue : " + response.toString());
+
+                try {
+                    dealer.addCardFromJson(response);
+                    
+                    Log.d("GameLogic", "Main dealer REEL : " + dealer.getCards().toString());
+                    Log.d("GameLogic", "Main Joueur REEL : " + player.getHand().toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public void playerHit() {

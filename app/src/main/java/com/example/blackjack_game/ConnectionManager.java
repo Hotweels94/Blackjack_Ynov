@@ -2,6 +2,8 @@ package com.example.blackjack_game;
 
 import android.util.Log;
 
+import com.example.blackjack_game.Game.ServerCallback;
+
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -55,11 +57,44 @@ public class ConnectionManager {
                 out.println(data.toString());
                 out.flush();
 
-                Log.d("Login", "Connexion ouverte et données envoyées : " + data.toString());
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
     }
+
+    public static void requestDealerHand(ServerCallback callback) {
+        new Thread(() -> {
+            try {
+                socket = new Socket(SERVER_IP, SERVER_PORT);
+                out = new PrintWriter(socket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                ConnectionManager.setSocket(socket);
+                ConnectionManager.setOut(out);
+                ConnectionManager.setIn(in);
+
+                JSONObject request = new JSONObject();
+                request.put("type", "request_dealer_hand");
+
+                out.println(request.toString());
+                out.flush();
+
+                // Lire la réponse ligne par ligne
+                String responseLine = in.readLine(); // attend une ligne finie par '\n'
+                Log.d("ConnectionManager", "Réponse reçue : " + responseLine);
+
+                if (responseLine != null) {
+                    JSONObject response = new JSONObject(responseLine);
+                    callback.onResponse(response);
+                } else {
+                    callback.onError(new Exception("Aucune réponse reçue du serveur"));
+                }
+
+            } catch (Exception e) {
+                callback.onError(e);
+            }
+        }).start();
+    }
+
 }

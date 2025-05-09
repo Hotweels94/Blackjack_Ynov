@@ -3,8 +3,9 @@ import socket
 from _thread import *
 import sys
 import time
+from dealerCards import *
 
-server = "192.168.56.1" # My testing address
+server = "10.0.0.19" # My testing address
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,6 +19,7 @@ except socket.error as e:
 queue = []
 s.listen(7) # Number of player (normally)
 print("Waiting for a connection, server started")
+games = []
 
 
 def threaded_client(conn):
@@ -34,33 +36,39 @@ def threaded_client(conn):
             try:
                 message = json.loads(raw_message)
                 
-                # Cas 1: Connexion initiale du joueur
+                #1 Connection of the user
                 if "username" in message and "password" in message:
                     player_data = json.loads(data.decode("utf-8"))
                     player_data["conn"] = conn
                     queue.append(player_data)
-                    print(f"Joueur reçu : {player_data}")
                     response = f"Joueur {player_data['username']} enregistré avec {player_data['balance']} €"  
                     conn.sendall(response.encode('utf-8'))
                 
-                # Cas 2: Réception d'une main
-                elif "cards" in message:
-                    print("\n=== MAIN REÇUE ===")
-                    print(f"Joueur : {message.get('username', 'inconnu')}")
+                #2 Cards
+                elif "cards" in message and "joueur":
+                    print("\n=== MAIN REÇUE JOUEUR ===")
                     print("Cartes :")
                     for card in message['cards']:
                         print(f"  - {card['rank']} de {card['suit']}")
                     print("==================\n")
                     conn.sendall(b"Main recue")
+                    
+                elif message.get("type") == "request_dealer_hand": 
+                    if games:
+                        dealer_hand_data = {
+                            "type": "dealer_hand",
+                            "cards": games[0]["dealer_hand"]
+                        }
+                        conn.sendall((json.dumps(dealer_hand_data) + "\n").encode("utf-8"))
+                        print("ENVOI FAIT")
+
                 
-                #Autres
                 else:
                     print(f"Action reçue : {message}")
                     response = process_game_action(message.get("action", ""))
                     conn.sendall(response.encode("utf-8"))
 
             except json.JSONDecodeError:
-                print(f"Message non-JSON : {raw_message}")
                 conn.sendall(b"Message non valide")
 
         except Exception as e:
@@ -71,12 +79,29 @@ def threaded_client(conn):
 def matchmaking():
     start_time = time.time()
     while True:
-        if len(queue) >= 7 or (time.time() - start_time > 90 and len(queue) > 0):
+        if len(queue) >= 7 or (time.time() - start_time > 10 and len(queue) > 0):
             game = queue[0:7]
             queue[:] = queue[7:]
+
+            deck = create_deck()
+            hand = draw_cards(deck, 2)
+
+            # Stocker la game dans games
+            games.append({
+                "players": game,
+                "dealer_hand": hand
+            })
+
+            dealer_hand_data = {
+                "type": "dealer_hand",
+                "cards": hand
+            }
+            handJson = json.dumps(dealer_hand_data)
+
             for player in game:
                 try:
-                    player["conn"].sendall(str.encode("start_game\n"))  
+                    player["conn"].sendall(str.encode("start_game\n"))
+                    player["conn"].sendall((handJson + "\n").encode("utf-8"))
                 except:
                     pass
             start_time = time.time()
