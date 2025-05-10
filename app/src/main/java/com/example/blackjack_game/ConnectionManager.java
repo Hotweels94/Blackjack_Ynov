@@ -15,7 +15,8 @@ public class ConnectionManager {
     private static Socket socket;
     private static PrintWriter out;
     private static BufferedReader in;
-    private static final String SERVER_IP = "192.168.56.1";
+    /* private static final String SERVER_IP = "192.168.56.1"; */
+    private static final String SERVER_IP = "192.168.1.168";
     private static final int SERVER_PORT = 5555;
 
     public static void setSocket(Socket s) {

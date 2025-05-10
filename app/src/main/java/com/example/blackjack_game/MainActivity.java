@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private GameLogic game;
     private TextView dealerHandTitle, playerHandTitle, balanceText;
     private LinearLayout dealerCardsLayout, playerCardsLayout;
-    private Button hitButton, standButton, doubleButton, seeHandsButton;
+    private Button hitButton, standButton, doubleButton, seeHandsButton, continueButton, quitButton;
     private int currentRound = 1;
     private View resultOverlay;
 
@@ -31,10 +31,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initViews();
-
         game = new GameLogic("Joueur", 3000.0);
-
+        
         setupButtons();
+        setupResultButtons();
+        
+        game.setGameStateListener(() -> runOnUiThread(this::updateGameState));
         showBetDialog();
     }
 
@@ -49,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
         doubleButton = findViewById(R.id.doubleButton);
         seeHandsButton = findViewById(R.id.see_hands);
         resultOverlay = findViewById(R.id.resultOverlay);
+        continueButton = findViewById(R.id.continueButton);
+        quitButton = findViewById(R.id.quitButton);
     }
 
     private void setupButtons() {
@@ -137,35 +141,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateCardImages() {
-        dealerCardsLayout.removeAllViews();
-        playerCardsLayout.removeAllViews();
+        runOnUiThread(() -> {
+            dealerCardsLayout.removeAllViews();
+            playerCardsLayout.removeAllViews();
 
-        // Cartes croupier
-        for (int i = 0; i < game.getDealer().getCards().size(); i++) {
-            Card card = game.getDealer().getCards().get(i);
-            ImageView cardImage = createCardImageView(card, i > 0 && !game.isRoundOver());
-            dealerCardsLayout.addView(cardImage);
-
-            // Ajouter une marge à droite sauf dernière carte
-            if (i < game.getDealer().getCards().size() - 1) {
-                View spacer = new View(this);
-                spacer.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(10), 0));
-                dealerCardsLayout.addView(spacer);
+            // Cartes du croupier - toujours afficher au moins une carte
+            boolean showDealerCards = !game.getDealer().getCards().isEmpty();
+            
+            if (showDealerCards) {
+                for (int i = 0; i < game.getDealer().getCards().size(); i++) {
+                    boolean isHidden = (i == 0 && !game.isRoundOver());
+                    addCardToLayout(dealerCardsLayout, game.getDealer().getCards().get(i), isHidden);
+                }
             }
-        }
 
-        // Cartes joueur
-        for (int i = 0; i < game.getPlayer().getHand().getCards().size(); i++) {
-            Card card = game.getPlayer().getHand().getCards().get(i);
-            ImageView cardImage = createCardImageView(card, false);
-            playerCardsLayout.addView(cardImage);
-
-            // Ajouter une marge à droite sauf dernière carte
-            if (i < game.getPlayer().getHand().getCards().size() - 1) {
-                View spacer = new View(this);
-                spacer.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(10), 0));
-                playerCardsLayout.addView(spacer);
+            // Cartes du joueur
+            for (Card card : game.getPlayer().getHand().getCards()) {
+                addCardToLayout(playerCardsLayout, card, false);
             }
+        });
+    }
+
+    private void addCardToLayout(LinearLayout layout, Card card, boolean hidden) {
+        ImageView cardImage = createCardImageView(card, hidden);
+        layout.addView(cardImage);
+
+        // Ajouter space entre les cartes
+        if (layout.getChildCount() > 1) {
+            View spacer = new View(this);
+            spacer.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(10), 0));
+            layout.addView(spacer, layout.getChildCount() - 1);
         }
     }
 
@@ -233,15 +238,26 @@ public class MainActivity extends AppCompatActivity {
         setGameButtonsEnabled(false);
     }
 
-    private void showGameResult() {
-        String result = determineResultText();
-        TextView resultText = findViewById(R.id.resultText);
-        resultText.setText(result);
-        resultOverlay.setVisibility(View.VISIBLE);
+private void showGameResult() {
+    String result = determineResultText();
+    TextView resultText = findViewById(R.id.resultText);
+    resultText.setText(result);
+    
+    if (game.getPlayer().getBalance() <= 0) {
+        continueButton.setVisibility(View.GONE); // Cache  l'opt "Continuer" si solde = 0
+        quitButton.setText("Game Over");
+    } else {
+        continueButton.setVisibility(View.VISIBLE);
+        quitButton.setText("Quitter la partie");
     }
+    
+    resultOverlay.setVisibility(View.VISIBLE);
+}
 
     private String determineResultText() {
-        if (game.getPlayer().getHand().isBlackjack()) {
+        if (game.getPlayer().getBalance() <= 0) {
+            return "Game Over!\nVotre solde est épuisé.";
+        }else if (game.getPlayer().getHand().isBlackjack()) {
             return "Blackjack!\nVous gagnez " + (int)(game.getPlayer().getCurrentBet() * 1.5) + "$ !";
         } else if (game.getPlayer().getHand().isBusted()) {
             return "Vous avez perdu!\nMise: " + (int)game.getPlayer().getCurrentBet() + "$";
@@ -280,4 +296,15 @@ public class MainActivity extends AppCompatActivity {
         standButton.setEnabled(enabled);
         doubleButton.setEnabled(enabled && game.getPlayer().canDoubleDown());
     }
+
+    private void setupResultButtons() {
+    continueButton.setOnClickListener(v -> {
+        resultOverlay.setVisibility(View.GONE);
+        showBetDialog();
+    });
+
+    quitButton.setOnClickListener(v -> {
+        finish();
+    });
+}
 }

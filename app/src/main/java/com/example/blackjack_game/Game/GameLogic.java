@@ -52,19 +52,20 @@ public class GameLogic {
         }
 
         dealer.getDealerHandFromServer(new ServerCallback() {
-            @Override
-            public void onResponse(JSONObject response) {
-                Log.d("GameLogic", "Main dealer reçue : " + response.toString());
-
-                try {
-                    dealer.addCardFromJson(response);
-                    
+        @Override
+        public void onResponse(JSONObject response) {
+            try {
+                dealer.addCardFromJson(response);
+                if (gameStateListener != null) {
+                    gameStateListener.onDealerHandUpdated();
                     Log.d("GameLogic", "Main dealer REEL : " + dealer.getCards().toString());
                     Log.d("GameLogic", "Main Joueur REEL : " + player.getHand().toString());
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+        }
+
 
             @Override
             public void onError(Exception e) {
@@ -140,5 +141,15 @@ public class GameLogic {
 
     public List<Card> getDealerCards() {
         return dealer.getCards();
+    }
+
+    public interface GameStateListener {
+        void onDealerHandUpdated();
+    }
+
+    private GameStateListener gameStateListener;
+
+    public void setGameStateListener(GameStateListener listener) {
+        this.gameStateListener = listener;
     }
 }
