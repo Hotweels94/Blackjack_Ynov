@@ -3,9 +3,12 @@ import socket
 from _thread import *
 import sys
 import time
+from threading import Lock
 from dealerCards import *
 
-server = "10.0.0.19" # My testing address
+hostname = socket.gethostname()
+server = socket.gethostbyname(hostname)
+print("IP : " + server)
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,10 +20,38 @@ except socket.error as e:
     print(e)
     
 queue = []
-s.listen(7) # Number of player (normally)
+match_timer_started = False
+queue_lock = Lock()
+s.listen(7) # Number of player
 print("Waiting for a connection, server started")
 games = []
 
+def start_new_game(players):
+    deck = create_deck()
+    dealer_hand = draw_cards(deck, 2)
+
+    game = {
+        "players": players,
+        "dealer_hand": dealer_hand,
+        "deck": deck
+    }
+    games.append(game)
+
+    dealer_hand_data = {
+        "type": "dealer_hand",
+        "cards": dealer_hand
+    }
+    hand_json = json.dumps(dealer_hand_data)
+
+    for player in players:
+        try:
+            message = f"start_game\n{hand_json}\n"
+            player["conn"].sendall(message.encode("utf-8"))
+        except Exception as e:
+            print(f"Erreur d'envoi à {player.get('username', 'inconnu')} : {e}")
+
+    print("✅ Nouvelle partie lancée avec les joueurs :", [p["username"] for p in players])
+    print("🃏 Main du croupier :", dealer_hand)
 
 def threaded_client(conn):
     while True:
@@ -53,14 +84,29 @@ def threaded_client(conn):
                     print("==================\n")
                     conn.sendall(b"Main recue")
                     
+                #3 Dealer hand ask from the server
                 elif message.get("type") == "request_dealer_hand": 
                     if games:
                         dealer_hand_data = {
                             "type": "dealer_hand",
-                            "cards": games[0]["dealer_hand"]
+                            "cards": games[len(games)-1]["dealer_hand"]
                         }
                         conn.sendall((json.dumps(dealer_hand_data) + "\n").encode("utf-8"))
                         print("ENVOI FAIT")
+                        print("MAIN CROUPIER 2  : ")
+                        print(dealer_hand_data)
+                        
+                #4 Continue the game
+                elif message.get("type") == "continue":
+                    username = message.get("username")
+                    print(f"Joueur {username} demande à rejouer")
+
+                    for game in games:
+                        for player in game["players"]:  
+                            player["conn"] = conn
+                            queue.append(player)
+                            conn.sendall(b"Ajoute a la queue pour une nouvelle partie")
+                            break
 
                 
                 else:
@@ -80,31 +126,12 @@ def matchmaking():
     start_time = time.time()
     while True:
         if len(queue) >= 7 or (time.time() - start_time > 10 and len(queue) > 0):
-            game = queue[0:7]
+            players_for_game = queue[0:7]
             queue[:] = queue[7:]
-
-            deck = create_deck()
-            hand = draw_cards(deck, 2)
-
-            # Stocker la game dans games
-            games.append({
-                "players": game,
-                "dealer_hand": hand
-            })
-
-            dealer_hand_data = {
-                "type": "dealer_hand",
-                "cards": hand
-            }
-            handJson = json.dumps(dealer_hand_data)
-
-            for player in game:
-                try:
-                    player["conn"].sendall(str.encode("start_game\n"))
-                    player["conn"].sendall((handJson + "\n").encode("utf-8"))
-                except:
-                    pass
+            start_new_game(players_for_game)
             start_time = time.time()
+            print("OUAIS OUAIS OUAIS")
+        time.sleep(1)
 
 def process_game_action(action):
     #logique actions du jeu

@@ -54,8 +54,7 @@ public class Dealer extends Hand {
     public void addCardFromJson(JSONObject cardJson) throws JSONException {
         JSONArray cardsArray = cardJson.getJSONArray("cards");
 
-        // Crée un dealer pour ajouter les cartes
-        Dealer dealer = new Dealer();
+        this.clear();
 
         for (int i = 0; i < cardsArray.length(); i++) {
             JSONObject cardJson2 = cardsArray.getJSONObject(i);
@@ -68,7 +67,7 @@ public class Dealer extends Hand {
 
             // Créer la carte et l'ajouter au dealer
             Card card = new Card(suit, rank);
-            dealer.addCard(card);
+            this.addCard(card);
         }
     }
 }

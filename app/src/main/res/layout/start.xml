@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="6dp"
-        android:text="Adresse e-mail"
+        android:text="Username"
         android:textColor="@color/white"
         android:textSize="16sp" />
 
@@ -42,16 +42,16 @@
         <EditText
             android:id="@+id/emailInput"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:hint="Entrez votre e-mail"
-            app:hintTextColor="@color/light_gray"
+            android:hint="Entrez votre username"
+            android:importantForAccessibility="yes"
             android:inputType="textEmailAddress"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:textColor="@color/white"
-            android:importantForAccessibility="yes" />
+            app:hintTextColor="@color/light_gray" />
     </LinearLayout>
 
     <!-- Mot de passe -->

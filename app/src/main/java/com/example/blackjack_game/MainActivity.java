@@ -3,6 +3,7 @@ package com.example.blackjack_game;
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -15,15 +16,22 @@ import com.example.blackjack_game.Game.GameLogic;
 import android.widget.EditText;
 
 import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.example.blackjack_game.PageConnection;
+
+import java.io.BufferedReader;
+import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity {
     private GameLogic game;
-    private TextView dealerHandTitle, playerHandTitle, balanceText;
+    private TextView dealerHandTitle, playerHandTitle, balanceText, usernameText;
     private LinearLayout dealerCardsLayout, playerCardsLayout;
     private Button hitButton, standButton, doubleButton, seeHandsButton, continueButton, quitButton;
     private int currentRound = 1;
     private View resultOverlay;
+    public static String username;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         
         setupButtons();
         setupResultButtons();
+
+        username = PageConnection.username;
+        usernameText.setText(PageConnection.username);
         
         game.setGameStateListener(() -> runOnUiThread(this::updateGameState));
         showBetDialog();
@@ -44,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         dealerHandTitle = findViewById(R.id.dealerHandTitle);
         playerHandTitle = findViewById(R.id.playerHandTitle);
         balanceText = findViewById(R.id.balanceText);
+        usernameText = findViewById(R.id.usernameText);
         dealerCardsLayout = findViewById(R.id.dealerCardsLayout);
         playerCardsLayout = findViewById(R.id.playerCardsLayout);
         hitButton = findViewById(R.id.hitButton);
@@ -301,6 +313,14 @@ private void showGameResult() {
     continueButton.setOnClickListener(v -> {
         resultOverlay.setVisibility(View.GONE);
         showBetDialog();
+        JSONObject continueUsername = new JSONObject();
+        try {
+            continueUsername.put("type", "continue");
+            continueUsername.put("username", PageConnection.username);
+            ConnectionManager.SendData(continueUsername);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     });
 
     quitButton.setOnClickListener(v -> {
