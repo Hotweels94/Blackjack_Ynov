@@ -110,22 +110,18 @@ def threaded_client(conn):
                 break
 
             raw_message = data.decode('utf-8')
-            print(f"Message brut reçu : {raw_message}")
+            safe_message = raw_message
+            try:
+                message = json.loads(raw_message)
+                if 'password' in message:
+                    safe_message = raw_message.replace(message['password'], '********')
+            except:
+                pass
+
+            print(f"Message brut reçu : {safe_message}")
 
             try:
-                print("Coucou")
                 message = json.loads(raw_message)
-
-                #1 Connection of the user
-                """ if message.get("type") == "login":
-                    print("LOGIN LOGIN")
-                    player_data = json.loads(data.decode("utf-8"))
-                    player_data["conn"] = conn
-                    print("PLAYER DATA : ", player_data)
-                    queue.append(player_data)
-                    response = f"Joueur {player_data['pseudo']} enregistré avec {player_data['balance']} €"
-                    print(f"Joueur enregistré : {player_data['pseudo']}")
-                    conn.sendall(response.encode('utf-8')) """
 
                 #2 Cards
                 # elif "cards" in message and "joueur":
@@ -212,7 +208,6 @@ def matchmaking():
             queue[:] = queue[7:]
             start_new_game(players_for_game)
             start_time = time.time()
-            print("OUAIS OUAIS OUAIS")
         time.sleep(1)
 
 def process_game_action(action):

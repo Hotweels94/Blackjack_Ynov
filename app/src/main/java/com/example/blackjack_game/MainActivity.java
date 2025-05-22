@@ -480,7 +480,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            
+
             finish();
         });
     }

@@ -251,7 +251,13 @@
         android:background="#80000000"
         android:visibility="gone"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:padding="16dp">
+
+        <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="300dp"
@@ -259,6 +265,7 @@
             android:orientation="vertical"
             android:background="@drawable/rounded_dialog"
             android:padding="20dp"
+            android:layout_margin="16dp"
             android:layout_centerInParent="true">
 
             <TextView
@@ -270,22 +277,23 @@
                 android:gravity="center"
                 android:layout_marginBottom="20dp"/>
 
-            <Button
-                android:id="@+id/continueButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Continuer"
-                android:layout_marginBottom="10dp"
-                android:backgroundTint="#4CAF50"
-                android:textColor="#FFFFFF"/>
+                <Button
+                    android:id="@+id/continueButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Continuer"
+                    android:layout_marginBottom="10dp"
+                    android:backgroundTint="#4CAF50"
+                    android:textColor="#FFFFFF"/>
 
-            <Button
-                android:id="@+id/quitButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Quitter la partie"
-                android:backgroundTint="#F44336"
-                android:textColor="#FFFFFF"/>
+                <Button
+                    android:id="@+id/quitButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Quitter la partie"
+                    android:backgroundTint="#F44336"
+                    android:textColor="#FFFFFF"/>
         </LinearLayout>
+    </ScrollView>
     </RelativeLayout>
 </LinearLayout>
