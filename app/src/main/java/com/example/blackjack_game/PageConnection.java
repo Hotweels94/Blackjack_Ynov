@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/blackjack_game/PageConnection.java
 package com.example.blackjack_game;
 
 import android.content.Intent;
@@ -16,12 +17,19 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class PageConnection extends AppCompatActivity {
 
+    private static final String TAG = "PageConnection";
+
     private EditText emailInput, passwordInput;
     private Button loginButton;
-    private TextView aText, connectionText;
+    private TextView aText, connectionText, registerLink;
 
     public static String username;
 
@@ -40,6 +48,7 @@ public class PageConnection extends AppCompatActivity {
 
         aText = findViewById(R.id.aText);
         connectionText = findViewById(R.id.connexionText);
+        registerLink = findViewById(R.id.registerLink);
 
         // Initialisation des vues
         emailInput = findViewById(R.id.emailInput);
@@ -53,24 +62,39 @@ public class PageConnection extends AppCompatActivity {
                 String email = emailInput.getText().toString();
                 String password = passwordInput.getText().toString();
 
+                Log.d(TAG, "Bouton Se connecter cliqué");
+                Log.d(TAG, "Pseudo: " + email);
+                Log.d(TAG, "Mot de passe: " + password);
+
                 // Vérification des champs non vides
                 if (!email.isEmpty() && !password.isEmpty()) {
-                    new SocketClient().execute(email, password);
+                    new LoginTask().execute(email, password);
                 } else {
                     aText.setText("Veuillez remplir tous les champs !");
                 }
             }
         });
+
+        registerLink.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(PageConnection.this, RegisterActivity.class);
+                Log.d("PageConnection", "Avant startActivity");
+                startActivity(intent);
+                Log.d("PageConnection", "Après startActivity");
+                finish();
+                Log.d("PageConnection", "Après finish");            
+            }
+        });
     }
 
-    public class SocketClient extends AsyncTask<String, Void, String> {
-        private static final String SERVER_IP = "10.0.0.19";
+    public class LoginTask extends AsyncTask<String, Void, String> {
+        private static final String SERVER_IP = "192.168.228.118";
         private static final int SERVER_PORT = 5555;
         private PrintWriter output;
         private BufferedReader input;
         private Socket socket;
         public String username;
-
 
         @Override
         protected String doInBackground(String... params) {
@@ -78,6 +102,10 @@ public class PageConnection extends AppCompatActivity {
                 username = params[0];
                 setUsername(username);
                 String password = params[1];
+
+                Log.d(TAG, "Envoi des données de connexion au serveur");
+                Log.d(TAG, "Pseudo: " + username);
+                Log.d(TAG, "Mot de passe: " + password);
 
                 socket = new Socket(SERVER_IP, SERVER_PORT);
                 output = new PrintWriter(socket.getOutputStream(), true);
@@ -88,16 +116,14 @@ public class PageConnection extends AppCompatActivity {
                 ConnectionManager.setIn(input);
 
                 JSONObject json = new JSONObject();
-                json.put("username", username);
+                json.put("type", "login");
+                json.put("pseudo", username);
                 json.put("password", password);
 
                 output.println(json.toString());
 
-                // Lance le thread d'écoute
-                new Thread(new IncomingReader()).start();
-
-                // Ne lis PAS la réponse ici, laisse IncomingReader s'en occuper
-                return "Connexion établie";
+                String response = input.readLine();
+                return response;
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -107,11 +133,12 @@ public class PageConnection extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            // Affiche la réponse dans un TextView ou autre
-            Toast.makeText(PageConnection.this, result, Toast.LENGTH_SHORT).show();
-            connectionText.setText("Waiting for players...");
-        }
+        super.onPostExecute(result);
+        Toast.makeText(PageConnection.this, result, Toast.LENGTH_SHORT).show();
+        connectionText.setText("Waiting for players...");
+
+        new Thread(new IncomingReader()).start();
+    }
 
         private class IncomingReader implements Runnable {
             @Override
@@ -119,28 +146,39 @@ public class PageConnection extends AppCompatActivity {
                 try {
                     String message;
                     while ((message = input.readLine()) != null) {
-                        final String finalMessage = message;
+                        Log.d("IncomingReader", "Message reçu: " + message);
+                        final String finalMessage = message.trim();
+                        
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                if (finalMessage.trim().equals("start_game")) {
+                                if (finalMessage.equals("start_game")) {
+                                    Log.d("PageConnection", "Redirection vers MainActivity");
                                     Intent intent = new Intent(PageConnection.this, MainActivity.class);
+                                    intent.putExtra("username", username);
                                     startActivity(intent);
+                                    finish(); // Ferme la page de connexion
                                 } else {
-                                    /* Pour les autres messages */
-                                    Log.d("PageConnection", finalMessage);
+                                    try {
+                                        JSONObject json = new JSONObject(finalMessage);
+                                        if (json.has("type") && json.getString("type").equals("dealer_hand")) {
+                                            Log.d("PageConnection", "Main du croupier reçue, redirection...");
+                                            Intent intent = new Intent(PageConnection.this, MainActivity.class);
+                                            intent.putExtra("username", username);
+                                            intent.putExtra("dealer_hand", finalMessage);
+                                            startActivity(intent);
+                                            finish();
+                                        }
+                                    } catch (JSONException e) {
+                                        Log.e("PageConnection", "Erreur parsing JSON", e);
+                                    }
                                 }
                             }
                         });
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            connectionText.setText("Erreur de connexion au serveur");
-                        }
-                    });
+                    Log.e("IncomingReader", "Erreur", e);
+                    runOnUiThread(() -> connectionText.setText("Erreur de connexion"));
                 }
             }
         }

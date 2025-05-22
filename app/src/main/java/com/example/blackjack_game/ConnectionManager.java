@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/blackjack_game/ConnectionManager.java
 package com.example.blackjack_game;
 
 import android.util.Log;
@@ -10,13 +11,16 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import android.util.Log;
+
 
 public class ConnectionManager {
     private static Socket socket;
     private static PrintWriter out;
     private static BufferedReader in;
     /* private static final String SERVER_IP = "192.168.56.1"; */
-    private static final String SERVER_IP = "10.0.0.19";
+    /* private static final String SERVER_IP = "10.0.0.19"; */
+    private static final String SERVER_IP = "192.168.228.118";
     private static final int SERVER_PORT = 5555;
 
     public static void setSocket(Socket s) {
@@ -42,7 +46,6 @@ public class ConnectionManager {
     public static BufferedReader getIn() {
         return in;
     }
-
 
     public static void SendData(JSONObject data) {
         new Thread(() -> {
@@ -97,5 +100,4 @@ public class ConnectionManager {
             }
         }).start();
     }
-
 }
