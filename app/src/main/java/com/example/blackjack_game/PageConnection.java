@@ -29,6 +29,7 @@ public class PageConnection extends AppCompatActivity {
     private EditText emailInput, passwordInput, ipInput;
     private Button loginButton;
     private TextView aText, connectionText, registerLink;
+    public static String serverIp;
 
     public static String username;
 
@@ -62,7 +63,7 @@ public class PageConnection extends AppCompatActivity {
             public void onClick(View v) {
                 String email = emailInput.getText().toString();
                 String password = passwordInput.getText().toString();
-                String serverIp = ipInput.getText().toString();
+                serverIp = ipInput.getText().toString();
 
                 Log.d(TAG, "Bouton Se connecter cliqué");
                 Log.d(TAG, "Pseudo: " + email);

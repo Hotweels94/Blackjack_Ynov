@@ -4,6 +4,7 @@ package com.example.blackjack_game;
 import android.util.Log;
 
 import com.example.blackjack_game.Game.ServerCallback;
+import com.example.blackjack_game.PageConnection;
 
 import org.json.JSONObject;
 
@@ -18,7 +19,6 @@ public class ConnectionManager {
     private static Socket socket;
     private static PrintWriter out;
     private static BufferedReader in;
-    private static final String SERVER_IP = "192.168.228.118";
     private static final int SERVER_PORT = 5555;
 
     public static void setSocket(Socket s) {
@@ -48,7 +48,7 @@ public class ConnectionManager {
     public static void SendData(JSONObject data) {
         new Thread(() -> {
             try {
-                socket = new Socket(SERVER_IP, SERVER_PORT);
+                socket = new Socket(PageConnection.serverIp, SERVER_PORT);
                 out = new PrintWriter(socket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -68,7 +68,7 @@ public class ConnectionManager {
     public static void requestDealerHand(ServerCallback callback) {
         new Thread(() -> {
             try {
-                socket = new Socket(SERVER_IP, SERVER_PORT);
+                socket = new Socket(PageConnection.serverIp, SERVER_PORT);
                 out = new PrintWriter(socket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
