@@ -24,10 +24,9 @@ import org.json.JSONObject;
 
 
 public class PageConnection extends AppCompatActivity {
-
     private static final String TAG = "PageConnection";
 
-    private EditText emailInput, passwordInput;
+    private EditText emailInput, passwordInput, ipInput;
     private Button loginButton;
     private TextView aText, connectionText, registerLink;
 
@@ -42,9 +41,10 @@ public class PageConnection extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.start);
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.start);
+
 
         aText = findViewById(R.id.aText);
         connectionText = findViewById(R.id.connexionText);
@@ -54,6 +54,7 @@ public class PageConnection extends AppCompatActivity {
         emailInput = findViewById(R.id.emailInput);
         passwordInput = findViewById(R.id.passwordInput);
         loginButton = findViewById(R.id.loginButton);
+        ipInput = findViewById(R.id.ipInput);
 
         // Définir l'action au clic sur le bouton
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -61,14 +62,15 @@ public class PageConnection extends AppCompatActivity {
             public void onClick(View v) {
                 String email = emailInput.getText().toString();
                 String password = passwordInput.getText().toString();
+                String serverIp = ipInput.getText().toString();
 
                 Log.d(TAG, "Bouton Se connecter cliqué");
                 Log.d(TAG, "Pseudo: " + email);
                 Log.d(TAG, "Mot de passe: " + password);
 
                 // Vérification des champs non vides
-                if (!email.isEmpty() && !password.isEmpty()) {
-                    new LoginTask().execute(email, password);
+                if (!email.isEmpty() && !password.isEmpty() && !serverIp.isEmpty()) {
+                    new LoginTask(serverIp).execute(email, password);
                 } else {
                     aText.setText("Veuillez remplir tous les champs !");
                 }
@@ -89,12 +91,16 @@ public class PageConnection extends AppCompatActivity {
     }
 
     public class LoginTask extends AsyncTask<String, Void, String> {
-        private static final String SERVER_IP = "192.168.228.118";
+        private final String serverIp;
         private static final int SERVER_PORT = 5555;
         private PrintWriter output;
         private BufferedReader input;
         private Socket socket;
         public String username;
+
+        public LoginTask(String serverIp) {
+            this.serverIp = serverIp;
+        }
 
         @Override
         protected String doInBackground(String... params) {
@@ -102,12 +108,15 @@ public class PageConnection extends AppCompatActivity {
                 username = params[0];
                 setUsername(username);
                 String password = params[1];
+                Log.d(TAG, "Connexion au serveur: " + serverIp + ":" + SERVER_PORT);
+                // socket = new Socket(serverIp, SERVER_PORT);
 
                 Log.d(TAG, "Envoi des données de connexion au serveur");
                 Log.d(TAG, "Pseudo: " + username);
                 Log.d(TAG, "Mot de passe: " + password);
+                Log.d(TAG, "Adresse IP: " + serverIp);
 
-                socket = new Socket(SERVER_IP, SERVER_PORT);
+                socket = new Socket(serverIp, SERVER_PORT);
                 output = new PrintWriter(socket.getOutputStream(), true);
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 

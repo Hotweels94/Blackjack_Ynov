@@ -22,7 +22,7 @@ import java.net.Socket;
 public class RegisterActivity extends AppCompatActivity {
     private static final String TAG = "RegisterActivity";
 
-    private EditText pseudoInput, passwordInput;
+    private EditText pseudoInput, passwordInput, ipInput;
     private Button registerButton;
     private TextView loginLink;
 
@@ -33,6 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         pseudoInput = findViewById(R.id.pseudoInput);
         passwordInput = findViewById(R.id.passwordInput);
+        ipInput = findViewById(R.id.ipInput);
         registerButton = findViewById(R.id.registerButton);
         loginLink = findViewById(R.id.loginLink);
 
@@ -41,13 +42,14 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String pseudo = pseudoInput.getText().toString();
                 String password = passwordInput.getText().toString();
+                String serverIp = ipInput.getText().toString();
 
                 Log.d(TAG, "Bouton S'inscrire cliqué");
                 Log.d(TAG, "Pseudo: " + pseudo);
                 Log.d(TAG, "Mot de passe: " + password);
 
-                if (!pseudo.isEmpty() && !password.isEmpty()) {
-                    new RegisterTask().execute(pseudo, password);
+                if (!pseudo.isEmpty() && !password.isEmpty() && !serverIp.isEmpty()) {
+                    new RegisterTask(serverIp).execute(pseudo, password);
                 } else {
                     Toast.makeText(RegisterActivity.this, "Veuillez remplir tous les champs !", Toast.LENGTH_SHORT).show();
                 }
@@ -64,12 +66,17 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     public class RegisterTask extends AsyncTask<String, Void, String> {
+        private final String serverIp;
         private static final String TAG = "RegisterTask";
-        private static final String SERVER_IP = "192.168.228.118";
+        // private static final String SERVER_IP = "192.168.228.118";
         private static final int SERVER_PORT = 5555;
         private PrintWriter output;
         private BufferedReader input;
         private Socket socket;
+
+        public RegisterTask(String serverIp) {
+            this.serverIp = serverIp;
+        }
 
         @Override
         protected String doInBackground(String... params) {
@@ -77,11 +84,14 @@ public class RegisterActivity extends AppCompatActivity {
                 String pseudo = params[0];
                 String password = params[1];
 
+                Log.d(TAG, "Connexion au serveur: " + serverIp + ":" + SERVER_PORT);
+                socket = new Socket(serverIp, SERVER_PORT);
+
                 Log.d(TAG, "Envoi des données d'inscription au serveur");
                 Log.d(TAG, "Pseudo: " + pseudo);
                 Log.d(TAG, "Mot de passe: " + password);
 
-                socket = new Socket(SERVER_IP, SERVER_PORT);
+                // socket = new Socket(SERVER_IP, SERVER_PORT);
                 output = new PrintWriter(socket.getOutputStream(), true);
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -97,7 +107,7 @@ public class RegisterActivity extends AppCompatActivity {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                return "Erreur de connexion";
+                return "Erreur de connexion à " + serverIp + ": " + e.getMessage();
             }
         }
 
