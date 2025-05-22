@@ -203,7 +203,7 @@ def threaded_client(conn):
 def matchmaking():
     start_time = time.time()
     while True:
-        if len(queue) >= 7 or (time.time() - start_time > 5 and len(queue) > 0):
+        if len(queue) >= 7 or (time.time() - start_time > 20 and len(queue) > 0):
             players_for_game = queue[0:7]
             queue[:] = queue[7:]
             start_new_game(players_for_game)

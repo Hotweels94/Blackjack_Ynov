@@ -18,7 +18,10 @@ Now, the server is running. In your terminal, you will see the ip address use to
 
 You need to start the server BEFORE start a game !
 In Android Studio, you will start the project and download it on the mobile emulator (or download it on your phone with Android Studio !).
+OR you can download the .apk for your phone like a real app !
+[APK](/app/release/app-release.apk)
 You will need to connect yourself to the game and write the IP address of the server.
+After, you will need to wait 20 seconds to let the time for all players to connect. After the game will start.
 Now you can play to our game (alone or with friends !).
 
 ## Rules 
